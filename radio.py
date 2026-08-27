@@ -6,7 +6,6 @@ from urllib.parse import urljoin
 
 BASE_URL = "https://www.mestoborohradek.cz"
 RADIO_URL = f"{BASE_URL}/zivot-ve-meste/aktuality-a-hlaseni/hlaseni-rozhlasu/"
-f"{BASE_URL}/zivot-ve-meste/aktuality-a-hlaseni/hlaseni-rozhlasu/"
 PROCESSED_FILE = "processed.json"
 
 
@@ -21,6 +20,37 @@ def load_processed():
 def save_processed(processed):
     with open(PROCESSED_FILE, "w", encoding="utf-8") as f:
         json.dump(sorted(processed), f, ensure_ascii=False, indent=2)
+
+
+def get_mp3(page_url):
+    response = requests.get(
+        page_url,
+        timeout=30,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Borohradek-Rozhlas)"
+        },
+    )
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Hledáme odkazy na MP3
+    for link in soup.find_all("a", href=True):
+        href = link["href"]
+
+        if ".mp3" in href.lower():
+            return urljoin(page_url, href)
+
+    # Zkusíme ještě audio element
+    for audio in soup.find_all("audio"):
+        if audio.get("src"):
+            return urljoin(page_url, audio["src"])
+
+        source = audio.find("source")
+        if source and source.get("src"):
+            return urljoin(page_url, source["src"])
+
+    return None
 
 
 def main():
@@ -73,6 +103,13 @@ def main():
         print("NOVÉ HLÁŠENÍ")
         print("Název:", item["title"])
         print("URL:", item["url"])
+
+        mp3_url = get_mp3(item["url"])
+
+        if mp3_url:
+            print("MP3:", mp3_url)
+        else:
+            print("MP3: NENALEZENA")
 
         processed.add(item["url"])
 
