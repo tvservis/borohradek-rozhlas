@@ -22,25 +22,22 @@ jobs:
           python-version: "3.x"
 
       - name: Instalace knihoven
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Instalace FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Kontrola hlaseni
-        run: |
-          python radio.py
+        run: python radio.py
 
       - name: Ulozeni stavu
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email 
-"41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add processed.json
-          git diff --cached --quiet || git commit -m "Aktualizace 
-zpracovanych hlaseni"
-          git push
-
+          if git diff --cached --quiet; then
+            echo "Zadna zmena v processed.json"
+          else
+            git commit -m "Aktualizace zpracovanych hlaseni"
+            git push
+          fi
