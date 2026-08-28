@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+downloads/
+output/
+test.mp3
+test.mp4
+processed.backup.json
+
