@@ -1,9 +1,9 @@
 name: Kontrola hlaseni rozhlasu
 
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * *'
 
 permissions:
   contents: write
@@ -16,30 +16,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Nastaveni Pythonu
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: '3.x'
 
-      - name: Instalace knihoven
+      - name: Install Python libraries
         run: pip install -r requirements.txt
 
-      - name: Instalace FFmpeg
+      - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Kontrola hlaseni
+      - name: Run radio script
         run: python radio.py
 
-      - name: Ulozeni stavu
+      - name: Save processed state
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name 'github-actions[bot]'
           git config user.email 
-"41898282+github-actions[bot]@users.noreply.github.com"
+'41898282+github-actions[bot]@users.noreply.github.com'
           git add processed.json
-          if git diff --cached --quiet; then
-            echo "Zadna zmena v processed.json"
-          else
-            git commit -m "Aktualizace zpracovanych hlaseni"
-            git push
-          fi
-
+          git commit -m 'Aktualizace zpracovanych hlaseni' || echo 'Zadne 
+zmeny'
+          git push
