@@ -33,9 +33,7 @@ jobs:
       - name: Save processed state
         run: |
           git config user.name 'github-actions[bot]'
-          git config user.email 
-'41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add processed.json
-          git commit -m 'Aktualizace zpracovanych hlaseni' || echo 'Zadne 
-zmeny'
+          git commit -m 'Aktualizace zpracovanych hlaseni' || echo 'Zadne zmeny'
           git push
