@@ -8,10 +8,7 @@ from urllib.parse import urljoin
 
 BASE_URL = "https://www.mestoborohradek.cz"
 RADIO_URL = f"{BASE_URL}/zivot-ve-meste/aktuality-a-hlaseni/hlaseni-rozhlasu/"
-<<<<<<< HEAD
-=======
 
->>>>>>> 0e54481 (Prvni verze automatizace hlaseni)
 PROCESSED_FILE = "processed.json"
 
 DOWNLOAD_DIR = "downloads"
@@ -29,12 +26,7 @@ def load_processed():
 
 def save_processed(processed):
     with open(PROCESSED_FILE, "w", encoding="utf-8") as f:
-        json.dump(
-            sorted(processed),
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+        json.dump(sorted(processed), f, ensure_ascii=False, indent=2)
 
 
 def get_mp3(page_url):
@@ -117,80 +109,34 @@ def create_mp4(mp3_file, output_file):
     command = [
         "ffmpeg",
         "-y",
-
         "-loop",
         "1",
-
         "-i",
         IMAGE_FILE,
-
         "-i",
         mp3_file,
-
         "-c:v",
         "libx264",
-
         "-preset",
         "medium",
-
         "-tune",
         "stillimage",
-
         "-c:a",
         "aac",
-
         "-b:a",
         "128k",
-
         "-pix_fmt",
         "yuv420p",
-
         "-shortest",
-
         "-vf",
         "scale=1080:1080:force_original_aspect_ratio=decrease,"
         "pad=1080:1080:(ow-iw)/2:(oh-ih)/2",
-
         output_file,
     ]
 
-    subprocess.run(
-        command,
-        check=True
-    )
+    subprocess.run(command, check=True)
 
     print("MP4 vytvořeno.")
-
-
-def get_mp3(page_url):
-    response = requests.get(
-        page_url,
-        timeout=30,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Borohradek-Rozhlas)"
-        },
-    )
-    response.raise_for_status()
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # Hledáme odkazy na MP3
-    for link in soup.find_all("a", href=True):
-        href = link["href"]
-
-        if ".mp3" in href.lower():
-            return urljoin(page_url, href)
-
-    # Zkusíme ještě audio element
-    for audio in soup.find_all("audio"):
-        if audio.get("src"):
-            return urljoin(page_url, audio["src"])
-
-        source = audio.find("source")
-        if source and source.get("src"):
-            return urljoin(page_url, source["src"])
-
-    return None
 
 
 def main():
@@ -249,13 +195,6 @@ def main():
 
         mp3_url = get_mp3(item["url"])
 
-<<<<<<< HEAD
-        if mp3_url:
-            print("MP3:", mp3_url)
-        else:
-            print("MP3: NENALEZENA")
-
-=======
         if not mp3_url:
             print("MP3: NENALEZENA")
             continue
@@ -279,8 +218,6 @@ def main():
             mp4_file
         )
 
-        # Označíme jako zpracované AŽ po úspěšném vytvoření MP4
->>>>>>> 0e54481 (Prvni verze automatizace hlaseni)
         processed.add(item["url"])
 
         print("Hlášení úspěšně zpracováno.")
