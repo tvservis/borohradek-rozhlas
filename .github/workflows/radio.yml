@@ -29,7 +29,14 @@ jobs:
 
       - name: Run radio script
         run: python radio.py
-
+        
+      - name: Upload MP4 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hlaseni-mp4
+          path: output/*.mp4
+          if-no-files-found: ignore
+          
       - name: Save processed state
         run: |
           git config user.name 'github-actions[bot]'
