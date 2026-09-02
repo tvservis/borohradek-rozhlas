@@ -36,6 +36,20 @@ jobs:
           name: hlaseni-mp4
           path: output/*.mp4
           if-no-files-found: ignore
+
+      - name: Poslat do Make
+        if: success()
+        run: |
+          for file in output/*.mp4; do
+            [ -e "$file" ] || continue
+
+            filename=$(basename "$file")
+
+            curl -X POST \
+              -H "Content-Type: application/json" \
+              -d "{\"filename\":\"$filename\"}" \
+              "${{ secrets.MAKE_WEBHOOK_URL }}"
+          done
           
       - name: Save processed state
         run: |
