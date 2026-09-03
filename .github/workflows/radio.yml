@@ -29,7 +29,7 @@ jobs:
 
       - name: Run radio script
         run: python radio.py
-        
+
       - name: Upload MP4 artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -37,20 +37,83 @@ jobs:
           path: output/*.mp4
           if-no-files-found: ignore
 
-      - name: Poslat do Make
-        if: success()
+      - name: Create releases and send to Make
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
         run: |
-          for file in output/*.mp4; do
-            [ -e "$file" ] || continue
+          if [ ! -f created.json ]; then
+            echo "created.json neexistuje."
+            exit 0
+          fi
 
-            filename=$(basename "$file")
+          count=$(jq 'length' created.json)
 
-            curl -X POST \
+          echo "Pocet novych hlaseni: $count"
+
+          if [ "$count" -eq 0 ]; then
+            echo "Zadne nove MP4 k odeslani."
+            exit 0
+          fi
+
+          i=0
+
+          jq -c '.[]' created.json | while read -r item; do
+            i=$((i + 1))
+
+            title=$(echo "$item" | jq -r '.title')
+            page_url=$(echo "$item" | jq -r '.page_url')
+            mp4_file=$(echo "$item" | jq -r '.mp4_file')
+
+            if [ ! -f "$mp4_file" ]; then
+              echo "Soubor neexistuje: $mp4_file"
+              continue
+            fi
+
+            filename=$(basename "$mp4_file")
+
+            tag="radio-${{ github.run_id }}-${{ github.run_attempt }}-$i"
+
+            echo "Vytvarim release:"
+            echo "$tag"
+            echo "$filename"
+
+            gh release create "$tag" \
+              "$mp4_file#$filename" \
+              --title "$title" \
+              --notes "$page_url"
+
+            video_url=$(gh release view "$tag" \
+              --json assets \
+              --jq '.assets[0].url')
+
+            echo "Verejna URL videa:"
+            echo "$video_url"
+
+            payload=$(jq -n \
+              --arg title "$title" \
+              --arg page_url "$page_url" \
+              --arg filename "$filename" \
+              --arg video_url "$video_url" \
+              '{
+                title: $title,
+                page_url: $page_url,
+                filename: $filename,
+                video_url: $video_url
+              }')
+
+            echo "Posilam do Make..."
+
+            curl --fail-with-body \
+              -X POST \
               -H "Content-Type: application/json" \
-              -d "{\"filename\":\"$filename\"}" \
-              "${{ secrets.MAKE_WEBHOOK_URL }}"
+              -d "$payload" \
+              "$MAKE_WEBHOOK_URL"
+
+            echo
+            echo "Odeslano do Make."
           done
-          
+
       - name: Save processed state
         run: |
           git config user.name 'github-actions[bot]'
