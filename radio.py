@@ -142,7 +142,7 @@ def create_mp4(mp3_file, output_file):
 def main():
 
     processed = load_processed()
-
+    created_items = []
     response = requests.get(
         RADIO_URL,
         timeout=30,
@@ -213,17 +213,25 @@ def main():
             base_name + ".mp4"
         )
 
-        create_mp4(
+                create_mp4(
             mp3_file,
             mp4_file
         )
+
+        created_items.append({
+            "title": item["title"],
+            "page_url": item["url"],
+            "mp4_file": mp4_file,
+        })
 
         processed.add(item["url"])
 
         print("Hlášení úspěšně zpracováno.")
 
     save_processed(processed)
-
+    
+    with open("created.json", "w", encoding="utf-8") as f:
+        json.dump(created_items, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
     main()
