@@ -213,7 +213,7 @@ def main():
             base_name + ".mp4"
         )
 
-                create_mp4(
+        create_mp4(
             mp3_file,
             mp4_file
         )
